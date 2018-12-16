@@ -1,0 +1,35 @@
+// Algorithim Parameters
+
+algorithim-display-type=5
+ 
+algorithim-min-green=160
+algorithim-max-green=246
+algorithim-min-red=139
+algorithim-max-red=216
+algorithim-min-blue=6
+algorithim-max-blue=71
+
+algorithim-min-width=10
+algorithim-max-width=100
+algorithim-min-height=10
+algorithim-max-height=100
+
+algorithim-jpeg-quality=77
+
+// Camera Parameters
+
+camera-auto-exposure=3
+camera-auto-focus=-10000
+camera-auto-white-balance=-10000
+camera-brightness=111
+camera-exposure-absolute=-10000
+camera-gain=-10000
+camera-white-balance-temperature=-10000
+algorithim-blur=5
+algorithim-color-space=1
+camera-server-port=5801
+network-table-address=192.168.1.9
+algorithim-dilate=0
+algorithim-erode=0
+camera-zoom=100
+camera-contrast=119
