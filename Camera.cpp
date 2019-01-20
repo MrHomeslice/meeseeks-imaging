@@ -7,6 +7,9 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <atomic>
+#include <thread>
+#include <chrono>
+#include <algorithm>
 
 #include <fcntl.h>
 #include "MeeseeksProperties.h"
@@ -18,9 +21,9 @@
 using namespace cv;
 using namespace std;
 
-extern MeeseeksProperties g_mp;
-extern pthread_mutex_t    g_lock;
-extern std::atomic<bool>             g_bStopThreads;
+extern MeeseeksProperties            g_mp;
+extern pthread_mutex_t               g_lock;
+extern std::atomic<bool>             g_bStopThreads, g_bSimActive, g_bSimFrameReady;
 extern std::shared_ptr<NetworkTable> g_targetTable; 
 
 unsigned char g_frameBuffer[VIDEO_WIDTH * VIDEO_HEIGHT * 3];
@@ -54,9 +57,11 @@ class Camera
 {
   public    : Camera();
               void Run();
+							void RunSim();
   protected :
               bool StreamOn();
               bool GetBuffer();
+							bool GetSimBuffer();
               void ProcessBuffer();
               bool ReturnBuffer();
               void StreamOff();
@@ -68,11 +73,14 @@ class Camera
 
               struct v4l2_buffer m_bufferInfo;
 							CameraParams       m_params;
+							Scalar 						 m_yellow, m_blue, m_red, m_green;							
               frameData          m_frameBuffer[BUF_COUNT];
-              int                m_type, m_fd;
+              int                m_type, m_fd, m_simFrameLength;
+							char      				 m_simFrame[640 * 360 * 4];
 };
 
 Camera::Camera()
+      : m_yellow(0, 255, 255), m_blue(255, 0, 0), m_red(0, 0, 255), m_green(0, 255, 0)
 {
 	m_fd   = -1;
 	m_type = 0;
@@ -244,47 +252,139 @@ void Camera::SaveFrame(Mat &frame)
 	pthread_mutex_unlock(&g_lock);
 }
 
+typedef struct
+{
+	RotatedRect rRect;
+	Rect        bRect;
+	Point2f     rRectPoints[4]; 	
+	float       angle;
+} TapeData;
+
+typedef struct
+{
+	TapeData left;
+	TapeData right;
+	float    heightRatio;
+	float    distance;
+} TargetData;
+
+bool XPositionSort(TapeData a, TapeData b) 
+{ 
+	return (a.rRect.center.x < b.rRect.center.x);
+}
+
 void Camera::ProcessFrame(Mat &frame, Mat &source)
 {
-	vector<vector<Point> > contours;
-	vector<Vec4i> hierarchy;
+	vector<vector<Point>> contours;
+	vector<Vec4i> 				hierarchy;
+
+	static double s_test = 0;
+
+	g_targetTable->PutNumber("X", s_test++);
 
 	findContours(frame, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0));
 
-	vector<vector<Point> > contours_poly(contours.size());
-	
-	double maxArea = -1000.0;
+	vector<TapeData> tapeVector;
+		
+	for (int i=0; i<contours.size(); i++) {
 
-	Rect boundRect;
+		TapeData tapeData;
 
-	for (int i = 0; i < contours.size(); i++) {
-		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
-		Moments moment = moments(contours[i]);
-		double area = moment.m00;
-		if (area > maxArea) {
-			maxArea = area;
-			boundRect = boundingRect(Mat(contours_poly[i]));
+		tapeData.rRect = minAreaRect(Mat(contours[i]));
+
+		if (tapeData.rRect.size.width * tapeData.rRect.size.height > g_mp.algorithim.minTapeArea) {
+					
+			tapeData.rRect.points(tapeData.rRectPoints);
+				
+			Point2f edge1 = Vec2f(tapeData.rRectPoints[1].x, tapeData.rRectPoints[1].y) - Vec2f(tapeData.rRectPoints[0].x, tapeData.rRectPoints[0].y);
+			Point2f edge2 = Vec2f(tapeData.rRectPoints[2].x, tapeData.rRectPoints[2].y) - Vec2f(tapeData.rRectPoints[1].x, tapeData.rRectPoints[1].y);
+
+			Point2f usedEdge = (norm(edge2) > norm(edge1)) ? edge2 : edge1;
+			Point2f reference = Vec2f(1,0);
+
+			tapeData.angle = 180.0f/CV_PI * acos((reference.x * usedEdge.x + reference.y * usedEdge.y) / (norm(reference) * norm(usedEdge)));	
+
+			if (tapeData.angle >= g_mp.algorithim.minTapeAngle && tapeData.angle <= g_mp.algorithim.maxTapeAngle) {
+
+				tapeData.bRect = boundingRect(Mat(contours[i]));		
+
+				tapeVector.push_back(tapeData);
+
+				if (g_mp.algorithim.displayType == 4) {
+
+					for (unsigned int j=0; j<4; ++j)
+						line(source, tapeData.rRectPoints[j], tapeData.rRectPoints[(j + 1) % 4], m_red);
+
+					circle(source, tapeData.rRect.center, 2, m_red);        
+				}
+			}
+  	}	
+	}
+
+	std::sort(tapeVector.begin(), tapeVector.end(), XPositionSort);
+
+	int tapeSize = tapeVector.size();
+
+	vector<TargetData> targets;
+
+	for (int l=0; l<tapeSize-1; l++) {
+		
+		if (tapeVector[l].angle < 90.0) {
+			
+			for (int r = l+1; r<tapeSize; r++) {
+				
+				if (tapeVector[r].angle > 90.0) {
+
+					float leftHeight  = tapeVector[l].bRect.height;
+					float rightHeight = tapeVector[r].bRect.height;		
+					float heightRatio = rightHeight / leftHeight;
+
+					if (heightRatio >= g_mp.algorithim.minTapeHeightRatio && heightRatio <= g_mp.algorithim.maxTapeHeightRatio) {
+						float yDistance = fabs(tapeVector[l].rRect.center.y - tapeVector[r].rRect.center.y);
+						float yDistanceFactor = yDistance / leftHeight;
+
+						if (yDistanceFactor >= g_mp.algorithim.minTapeYDistRatio && yDistanceFactor <= g_mp.algorithim.maxTapeYDistRatio) {
+							float xDistance = fabs(tapeVector[l].rRect.center.x - tapeVector[r].rRect.center.x);
+							float xDistanceFactor = xDistance / leftHeight;
+
+							if (xDistanceFactor >= g_mp.algorithim.minTapeXDistRatio && xDistanceFactor <= g_mp.algorithim.maxTapeXDistRatio) {
+								TargetData t;
+								t.left = tapeVector[l];
+								t.right = tapeVector[r];
+								t.heightRatio = heightRatio;
+								targets.push_back(t);														
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
-	if (maxArea != -1000.0) {
-		g_targetX = boundRect.x + boundRect.width  / 2;
-		g_targetY = boundRect.y + boundRect.height / 2;	
-   	g_targetTable->PutNumber("X", g_targetX);
-   	g_targetTable->PutNumber("Y", g_targetY);
+
+	const float tapeWidth   = 14.5;
+	const float screenWidth = 640.0;			
+	const float tan35       = tan(2.0 * 3.141592654 * (35.0 / 360.0));
+
+	for (int i=0; i<targets.size(); i++) {
+			float pixelWidth    = targets[i].right.bRect.br().x - targets[i].left.bRect.tl().x;
+			float side          = (tapeWidth * screenWidth) / (2.0 * pixelWidth);
+			targets[i].distance = side / tan35;
 	}
 
-	if (g_mp.algorithim.displayType == 4) {
-		Mat drawing = Mat::zeros(frame.size(), CV_8UC3);
-		cv::Scalar green(0, 255, 0);
-		for (int i = 0; i< contours.size(); i++)
-			drawContours(drawing, contours_poly, i, green, 1, 8, vector<Vec4i>(), 0, Point());
-		SaveFrame(drawing);
+	if (g_mp.algorithim.displayType == 5) {
+		for (unsigned int i = 0; i < targets.size();i++) {			
+			rectangle(source, targets[i].left.bRect.tl(), targets[i].right.bRect.br(), cv::Scalar(0, 255, 0));
+			line(source, targets[i].left.rRectPoints[0], targets[i].right.rRectPoints[0], m_red);
+			line(source, targets[i].left.rRectPoints[3], targets[i].right.rRectPoints[1], m_red);
+			char text[32];
+			sprintf(text, "%.3f, %.3f", targets[i].distance, targets[i].heightRatio);
+			putText(source, text, targets[i].left.bRect.tl(), FONT_HERSHEY_PLAIN, 1.0, Scalar(0, 0, 0));			
+		}
 	}
-	else if (g_mp.algorithim.displayType == 5) {
-		cv::Scalar green(0, 255, 0);
-		rectangle(source, boundRect, green, 2, 8, 0);		
+
+	if (g_mp.algorithim.displayType > 3)
 		SaveFrame(source);
-	}
 }
 
 void ErodeDilate(Mat &input, Mat &output)
@@ -326,13 +426,19 @@ void Camera::ProcessBuffer()
 {
   if (g_mp.algorithim.displayType == 0) {
 	  pthread_mutex_lock(&g_lock);
-		memcpy(g_frameBuffer, m_frameBuffer[m_bufferInfo.index].data, m_bufferInfo.bytesused);
-		g_frameBufferSize = m_bufferInfo.bytesused;
+		if (!g_bSimActive) {
+			memcpy(g_frameBuffer, m_frameBuffer[m_bufferInfo.index].data, m_bufferInfo.bytesused);
+			g_frameBufferSize = m_bufferInfo.bytesused;
+		} 
+		else {
+			memcpy(g_frameBuffer, m_simFrame, m_simFrameLength);
+			g_frameBufferSize = m_simFrameLength;
+		}
 		g_bNewFrame = true;
 		pthread_mutex_unlock(&g_lock);
 	}
 
-	Mat mjpegData(1, m_bufferInfo.bytesused, CV_8UC1, m_frameBuffer[m_bufferInfo.index].data);
+	Mat mjpegData(1, g_bSimActive ? m_simFrameLength : m_bufferInfo.bytesused, CV_8UC1, g_bSimActive ? m_simFrame : m_frameBuffer[m_bufferInfo.index].data);
 		
   Mat data = imdecode(mjpegData, -1);
 		
@@ -350,10 +456,20 @@ void Camera::ProcessBuffer()
 
 		if (g_mp.algorithim.displayType == 2)
 			SaveFrame(erodeDilateData);
+
+		bool bContinue = true;
 			
-		if (g_mp.algorithim.colorSpace == 1) {
-			cvtColor(erodeDilateData, hsvFrame, COLOR_BGR2HSV);	
-	   	inRange(hsvFrame, Scalar(g_mp.algorithim.minRed, g_mp.algorithim.minGreen, g_mp.algorithim.minBlue), Scalar(g_mp.algorithim.maxRed, g_mp.algorithim.maxGreen, g_mp.algorithim.maxBlue), grayFrame);
+		if (g_mp.algorithim.colorSpace == 1) {			
+			try {
+				cvtColor(erodeDilateData, hsvFrame, COLOR_BGR2HSV);	
+			}
+			catch( Exception& e )
+			{
+    		//const char* err_msg = e.what();
+    		//printf("%s\n", err_msg);
+				return;
+			}
+	   	inRange(hsvFrame, Scalar(g_mp.algorithim.minRed, g_mp.algorithim.minGreen, g_mp.algorithim.minBlue), Scalar(g_mp.algorithim.maxRed, g_mp.algorithim.maxGreen, g_mp.algorithim.maxBlue), grayFrame);		
 		}
 		else
 			inRange(erodeDilateData, Scalar(g_mp.algorithim.minRed, g_mp.algorithim.minGreen, g_mp.algorithim.minBlue), Scalar(g_mp.algorithim.maxRed, g_mp.algorithim.maxGreen, g_mp.algorithim.maxBlue), grayFrame);
@@ -365,6 +481,25 @@ void Camera::ProcessBuffer()
   }
 
 	g_frameCount++;
+}
+
+bool GetSimFrame(char *pSimFrame, int &length);
+
+bool Camera::GetSimBuffer()
+{
+	do {
+		if (g_bSimFrameReady) {			
+			if (GetSimFrame(m_simFrame, m_simFrameLength)) {
+				g_bSimFrameReady = false;
+				return true;			
+			}
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+	} while (1);
+
+	return false;
 }
 
 bool Camera::ReturnBuffer()
@@ -485,9 +620,27 @@ void Camera::Run()
 	printf("Camera thread terminated\n");
 }
 
+void Camera::RunSim()
+{
+	int loopCount = 0;
+
+	do	{
+    if (!GetSimBuffer())
+      break;
+
+    ProcessBuffer();
+
+	} while (!g_bStopThreads);
+
+	printf("Camera thread terminated\n");
+}
+
 void CameraThread()
 {
   Camera camera;
 
-  camera.Run();
+	if (g_bSimActive)
+		camera.RunSim();
+	else
+  	camera.Run();
 }

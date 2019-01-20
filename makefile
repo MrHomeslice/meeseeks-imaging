@@ -1,4 +1,4 @@
- CC = g++
+CC = g++
 TARGET_EXEC ?= v1
 
 BUILD_DIR ?= ./build
