@@ -50,4 +50,4 @@ algorithim-min-tape-x-dist-ratio=1.000000
 algorithim-min-tape-y-dist-ratio=0.000000
 
 //Misc params
-simulation-active=1
+simulation-active=0
