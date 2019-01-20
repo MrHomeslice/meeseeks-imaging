@@ -15,28 +15,28 @@ typedef map<int, string>    IntToStringMap;
 typedef set<string>					StringSet;
 
 typedef struct {
-	int displayType;
-	int minWidth;
-	int minHeight;
-	int maxWidth;
-	int maxHeight;
-	int minRed, maxRed;
-	int minGreen, maxGreen;
-	int minBlue, maxBlue;
-	int jpgQuality;
-	int colorSpace;
-	int blur;
-	int erode;
-	int dilate;
-	int minTapeArea;
-	int minTapeAngle;
-	int maxTapeAngle;
-	double minTapeHeightRatio;
-	double maxTapeHeightRatio;
-	double minTapeYDistRatio;
-	double maxTapeYDistRatio;
-	double minTapeXDistRatio;
-	double maxTapeXDistRatio;
+  int displayType;
+  int minWidth;
+  int minHeight;
+  int maxWidth;
+  int maxHeight;
+  int minRed, maxRed;
+  int minGreen, maxGreen;
+  int minBlue, maxBlue;
+  int jpgQuality;
+  int colorSpace;
+  int blur;
+  int erode;
+  int dilate;
+  int minTapeArea;
+  int minTapeAngle;
+  int maxTapeAngle;
+  double minTapeHeightRatio;
+  double maxTapeHeightRatio;
+  double minTapeYDistRatio;
+  double maxTapeYDistRatio;
+  double minTapeXDistRatio;
+  double maxTapeXDistRatio;
 } AlgorithimParams;
 
 typedef struct {
@@ -49,9 +49,9 @@ typedef struct {
    int autoFocus;
    int zoom;
    int contrast;
-	 int saturation;
-	 int sharpness;
-	 int focus;
+   int saturation;
+   int sharpness;
+   int focus;
 } CameraParams;
 
 #define ALGORITHIM_DISPLAY_TYPE  "algorithim-display-type"
@@ -144,34 +144,34 @@ typedef struct {
 
 class MeeseeksProperties
 {
-	public    : MeeseeksProperties();
+  public    : MeeseeksProperties();
 
-							void Initialize();
+              void Initialize();
 
-							void LoadFromFile(const char *pFileName);
-							void LoadFromString(const std::string &str);
-							void SaveToString(std::string &str);
-							void SaveToFile(const char *pFileName);
-							void SetProperty(const std::string &nameValue);
-							bool NewProperties();
+              void LoadFromFile(const char *pFileName);
+              void LoadFromString(const std::string &str);
+              void SaveToString(std::string &str);
+              void SaveToFile(const char *pFileName);
+              void SetProperty(const std::string &nameValue);
+              bool NewProperties();
 
-							CameraParams      camera;
-							AlgorithimParams  algorithim;
-							std::string       networkTableAddress;
-							int               serverPort, simulationPort;
-							bool              bSimActive;
-	protected :
-							const char *GetString(const char *pName, const char *pDefaultValue);
-							int         GetInt(const char *pName, int defaultValue);
-							double      GetDouble(const char *pName, double defaultValue);
-							const char *IntToString(int intValue, char *pStringValue);
-							const char *DoubleToString(double doubleValue, char *pStringValue);
-							void        SetProperties();
+              CameraParams      camera;
+              AlgorithimParams  algorithim;
+              std::string       networkTableAddress;
+              int               serverPort, simulationPort;
+              bool              bSimActive;
+  protected :
+              const char *GetString(const char *pName, const char *pDefaultValue);
+              int         GetInt(const char *pName, int defaultValue);
+              double      GetDouble(const char *pName, double defaultValue);
+              const char *IntToString(int intValue, char *pStringValue);
+              const char *DoubleToString(double doubleValue, char *pStringValue);
+              void        SetProperties();
 
-							StringToStringMap nameValueMap;
-							IntToStringMap    lineNameMap;
-							StringVector      lines;
-							std::atomic<int>  newProperties;
+              StringToStringMap nameValueMap;
+              IntToStringMap    lineNameMap;
+              StringVector      lines;
+              std::atomic<int>  newProperties;
 
 };
 

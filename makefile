@@ -20,28 +20,28 @@ LDFLAGS_NTCORE ?= -L/home/ubuntu/Documents/frc/ntcore -lntcore -lwpiutil -lpthre
 LDFLAGS ?= -L/home/ubuntu/Documents/frc/ntcore -lntcore -lwpiutil -lpthread `pkg-config --libs opencv`
 
 $(TARGET_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+  $(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 # assembly
 $(BUILD_DIR)/%.s.o: %.s
-	$(MKDIR_P) $(dir $@)
-	$(AS) $(ASFLAGS) -c $< -o $@
+  $(MKDIR_P) $(dir $@)
+  $(AS) $(ASFLAGS) -c $< -o $@
 
 # c source
 $(BUILD_DIR)/%.c.o: %.c
-	$(MKDIR_P) $(dir $@)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+  $(MKDIR_P) $(dir $@)
+  $(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 # c++ source
 $(BUILD_DIR)/%.cpp.o: %.cpp
-	$(MKDIR_P) $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+  $(MKDIR_P) $(dir $@)
+  $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 
 .PHONY: clean
 
 clean:
-	$(RM) -r $(BUILD_DIR)
+  $(RM) -r $(BUILD_DIR)
 
 -include $(DEPS)
 

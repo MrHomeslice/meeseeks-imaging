@@ -133,8 +133,8 @@ bool ControlServer::SetProperty(int conn)
 double ControlServer::GetCameraFPS()
 {
   double timeNow   = GetTimeStamp();
-	double deltaTime = timeNow - g_startTime;
-	double fps       = ((double) g_frameCount) / deltaTime;
+  double deltaTime = timeNow - g_startTime;
+  double fps       = ((double) g_frameCount) / deltaTime;
 
   g_frameCount = 0;
   g_startTime = timeNow;
@@ -145,9 +145,9 @@ double ControlServer::GetCameraFPS()
 void ControlServer::GetVideoFPSAndBandwidth(double &fps, double &bandwidth)
 {
   double timeNow   = GetTimeStamp();
-	double deltaTime = timeNow - g_serverFrameStartTime;
+  double deltaTime = timeNow - g_serverFrameStartTime;
 
-	fps       = ((double) g_serverFrameCount) / deltaTime;
+  fps       = ((double) g_serverFrameCount) / deltaTime;
   bandwidth = g_totalByteCount / deltaTime;
   bandwidth *= 8;
   bandwidth /= 1000000.0f;

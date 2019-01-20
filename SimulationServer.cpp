@@ -24,7 +24,7 @@ void SetSimFrame(unsigned char *pFrame, int length)
   memcpy(g_pSimFrame, pFrame, length);
   g_simFrameSize = length;
   g_bSimFrameReady = true;
-	
+  
   pthread_mutex_unlock(&g_simFrameLock);  
 }
 
@@ -41,7 +41,7 @@ bool GetSimFrame(char *pSimFrame, int &length)
   }  
   else
     length = 0;
-	
+  
   pthread_mutex_unlock(&g_simFrameLock);  
 
   return bStatus;

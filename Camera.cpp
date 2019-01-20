@@ -36,97 +36,97 @@ int g_targetX = -1;
 int g_targetY = -1;
 
 typedef struct {
-	char *data;
-	struct v4l2_buffer info;
+  char *data;
+  struct v4l2_buffer info;
 } frameData;
 
 #define BUF_COUNT  8
 
 double GetTimeStamp()
 {
-	struct timeval tv;
+  struct timeval tv;
 
-	gettimeofday(&tv, NULL);
+  gettimeofday(&tv, NULL);
 
-	double seconds      = (double)tv.tv_sec;
-	double microSeconds = (double)tv.tv_usec;
-	return seconds + microSeconds / 1000000.0;
+  double seconds      = (double)tv.tv_sec;
+  double microSeconds = (double)tv.tv_usec;
+  return seconds + microSeconds / 1000000.0;
 }
 
 class Camera
 {
   public    : Camera();
               void Run();
-							void RunSim();
+              void RunSim();
   protected :
               bool StreamOn();
               bool GetBuffer();
-							bool GetSimBuffer();
+              bool GetSimBuffer();
               void ProcessBuffer();
               bool ReturnBuffer();
               void StreamOff();
-							void CheckParams();
+              void CheckParams();
 
               void SaveFrame(Mat &frame);
               void ProcessFrame(Mat &frame, Mat &source);
-							void SetCamParam(int param, int value, const char *pName);
+              void SetCamParam(int param, int value, const char *pName);
 
               struct v4l2_buffer m_bufferInfo;
-							CameraParams       m_params;
-							Scalar 						 m_yellow, m_blue, m_red, m_green;							
+              CameraParams       m_params;
+              Scalar 						 m_yellow, m_blue, m_red, m_green;							
               frameData          m_frameBuffer[BUF_COUNT];
               int                m_type, m_fd, m_simFrameLength;
-							char      				 m_simFrame[640 * 360 * 4];
+              char      				 m_simFrame[640 * 360 * 4];
 };
 
 Camera::Camera()
       : m_yellow(0, 255, 255), m_blue(255, 0, 0), m_red(0, 0, 255), m_green(0, 255, 0)
 {
-	m_fd   = -1;
-	m_type = 0;
-	
-	memset(&m_bufferInfo, 0, sizeof(m_bufferInfo));
-	
-	for (int i=0; i<BUF_COUNT; i++)
-		m_frameBuffer[i].data = NULL;
+  m_fd   = -1;
+  m_type = 0;
+  
+  memset(&m_bufferInfo, 0, sizeof(m_bufferInfo));
+  
+  for (int i=0; i<BUF_COUNT; i++)
+    m_frameBuffer[i].data = NULL;
 
-	m_params.autoExposure             = -10000;
-	m_params.exposureAbsolute					= -10000;
-	m_params.autoWhiteBalance					= -10000;
-	m_params.whiteBalanceTemperature	= -10000;
-	m_params.brightness								= -10000;
-	m_params.gain											= -10000;
-	m_params.autoFocus								= -10000;
+  m_params.autoExposure             = -10000;
+  m_params.exposureAbsolute					= -10000;
+  m_params.autoWhiteBalance					= -10000;
+  m_params.whiteBalanceTemperature	= -10000;
+  m_params.brightness								= -10000;
+  m_params.gain											= -10000;
+  m_params.autoFocus								= -10000;
 }
 
 void Camera::SetCamParam(int param, int value, const char *pName)
 {
-	v4l2_control params;
-	v4l2_queryctrl qc;
+  v4l2_control params;
+  v4l2_queryctrl qc;
 
-	memset(&qc, 0, sizeof(qc));
+  memset(&qc, 0, sizeof(qc));
 
-	qc.id = param;
+  qc.id = param;
 
-	int status = ioctl(m_fd, VIDIOC_QUERYCTRL, &qc);
+  int status = ioctl(m_fd, VIDIOC_QUERYCTRL, &qc);
 
-	if (status == -1) {
-		printf("Error setting %s. ioctl VIDIOC_QUERYCTRL errno = %d\r\n", pName, errno);
-		return;
-	}
+  if (status == -1) {
+    printf("Error setting %s. ioctl VIDIOC_QUERYCTRL errno = %d\r\n", pName, errno);
+    return;
+  }
 
-	if (qc.flags & V4L2_CTRL_FLAG_DISABLED) {
-		printf("V4L2_CTRL_FLAG_DISABLED\r\n");
-		return;
-	}
+  if (qc.flags & V4L2_CTRL_FLAG_DISABLED) {
+    printf("V4L2_CTRL_FLAG_DISABLED\r\n");
+    return;
+  }
 
-	params.id = param;
-	params.value = value;
+  params.id = param;
+  params.value = value;
 
-	status = ioctl(m_fd, VIDIOC_S_CTRL, &params);
+  status = ioctl(m_fd, VIDIOC_S_CTRL, &params);
 
-	if (status == -1)
-		printf("Error setting %s. ioctl VIDIOC_S_CTRL errno = %d\r\n", pName, errno);
+  if (status == -1)
+    printf("Error setting %s. ioctl VIDIOC_S_CTRL errno = %d\r\n", pName, errno);
 }
 
 bool Camera::StreamOn()
@@ -134,100 +134,100 @@ bool Camera::StreamOn()
   if ((m_fd = open("/dev/video0", O_RDWR)) < 0) {	
     printf("Cannot open /dev/video0\n");	
     return false;
-	}
+  }
 
-	struct v4l2_format format;
+  struct v4l2_format format;
 
-	memset(&format, 0, sizeof(format));
+  memset(&format, 0, sizeof(format));
 
-	format.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	format.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
-	format.fmt.pix.width       = VIDEO_WIDTH;
-	format.fmt.pix.height      = VIDEO_HEIGHT;
+  format.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  format.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+  format.fmt.pix.width       = VIDEO_WIDTH;
+  format.fmt.pix.height      = VIDEO_HEIGHT;
 
-	if (ioctl(m_fd, VIDIOC_S_FMT, &format) < 0) {
+  if (ioctl(m_fd, VIDIOC_S_FMT, &format) < 0) {
     printf("Failure setting video format\n");
     close(m_fd);
     return false;
   }
 
-	struct v4l2_requestbuffers bufrequest;
+  struct v4l2_requestbuffers bufrequest;
 
-	memset(&bufrequest, 0, sizeof(bufrequest));
-	
+  memset(&bufrequest, 0, sizeof(bufrequest));
+  
   bufrequest.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	bufrequest.memory = V4L2_MEMORY_MMAP;
-	bufrequest.count  = BUF_COUNT;
+  bufrequest.memory = V4L2_MEMORY_MMAP;
+  bufrequest.count  = BUF_COUNT;
 
-	if (ioctl(m_fd, VIDIOC_REQBUFS, &bufrequest) < 0) {
+  if (ioctl(m_fd, VIDIOC_REQBUFS, &bufrequest) < 0) {
     printf("Failure requesting buffers\n");
     close(m_fd);
     return false;
   }
 
-	for (int i = 0; i<BUF_COUNT; i++) {
-		memset(&m_frameBuffer[i], 0, sizeof(frameData));
+  for (int i = 0; i<BUF_COUNT; i++) {
+    memset(&m_frameBuffer[i], 0, sizeof(frameData));
 
-		m_frameBuffer[i].info.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-		m_frameBuffer[i].info.memory = V4L2_MEMORY_MMAP;
-		m_frameBuffer[i].info.index  = i;
+    m_frameBuffer[i].info.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    m_frameBuffer[i].info.memory = V4L2_MEMORY_MMAP;
+    m_frameBuffer[i].info.index  = i;
 
-		if (ioctl(m_fd, VIDIOC_QUERYBUF, &m_frameBuffer[i].info) < 0) {
+    if (ioctl(m_fd, VIDIOC_QUERYBUF, &m_frameBuffer[i].info) < 0) {
       printf("Failure querying buffer %d\n", i);
       close(m_fd);
       return false;
-		}
+    }
 
-		m_frameBuffer[i].data = (char *) mmap(NULL, m_frameBuffer[i].info.length, PROT_READ | PROT_WRITE, MAP_SHARED, m_fd, m_frameBuffer[i].info.m.offset);
+    m_frameBuffer[i].data = (char *) mmap(NULL, m_frameBuffer[i].info.length, PROT_READ | PROT_WRITE, MAP_SHARED, m_fd, m_frameBuffer[i].info.m.offset);
 
-		if (m_frameBuffer[i].data == MAP_FAILED) {
+    if (m_frameBuffer[i].data == MAP_FAILED) {
       printf("Failure during mmap on buffer %d", i);
-	    for (int j = 0; j<i; j++) {
-		    if (m_frameBuffer[j].data)
-			    munmap(m_frameBuffer[j].data, m_frameBuffer[j].info.length);
+      for (int j = 0; j<i; j++) {
+        if (m_frameBuffer[j].data)
+          munmap(m_frameBuffer[j].data, m_frameBuffer[j].info.length);
       }
       close(m_fd);
       return false;
-	  }
-		memset(m_frameBuffer[i].data, 0, m_frameBuffer[i].info.length);
-	}
-
-	for (int i = 0; i<BUF_COUNT; i++) {
-		if (ioctl(m_fd, VIDIOC_QBUF, &m_frameBuffer[i].info) < 0) {
-      printf("Error queuing buffer %d\n", i);
-	    for (int j = 0; j<BUF_COUNT; j++) {
-		    if (m_frameBuffer[j].data)
-			    munmap(m_frameBuffer[j].data, m_frameBuffer[j].info.length);
-      }
-			close(m_fd);
-      return false;
-		}
-	}
-
-	m_type = m_frameBuffer[0].info.type;
-
-	if (ioctl(m_fd, VIDIOC_STREAMON, &m_type) < 0) {
-    printf("Error turning on stream\n");
-	  for (int i = 0; i<BUF_COUNT; i++) {
-		  if (m_frameBuffer[i].data)
-			  munmap(m_frameBuffer[i].data, m_frameBuffer[i].info.length);
     }
-		close(m_fd);
-    return false;
-	}
+    memset(m_frameBuffer[i].data, 0, m_frameBuffer[i].info.length);
+  }
 
- 	g_frameBufferSize = 0;
-	
-	g_startTime = GetTimeStamp();
+  for (int i = 0; i<BUF_COUNT; i++) {
+    if (ioctl(m_fd, VIDIOC_QBUF, &m_frameBuffer[i].info) < 0) {
+      printf("Error queuing buffer %d\n", i);
+      for (int j = 0; j<BUF_COUNT; j++) {
+        if (m_frameBuffer[j].data)
+          munmap(m_frameBuffer[j].data, m_frameBuffer[j].info.length);
+      }
+      close(m_fd);
+      return false;
+    }
+  }
+
+  m_type = m_frameBuffer[0].info.type;
+
+  if (ioctl(m_fd, VIDIOC_STREAMON, &m_type) < 0) {
+    printf("Error turning on stream\n");
+    for (int i = 0; i<BUF_COUNT; i++) {
+      if (m_frameBuffer[i].data)
+        munmap(m_frameBuffer[i].data, m_frameBuffer[i].info.length);
+    }
+    close(m_fd);
+    return false;
+  }
+
+   g_frameBufferSize = 0;
+  
+  g_startTime = GetTimeStamp();
 }
 
 bool Camera::GetBuffer()
 {
-	memset(&m_bufferInfo, 0, sizeof(m_bufferInfo));
-	
+  memset(&m_bufferInfo, 0, sizeof(m_bufferInfo));
+  
   m_bufferInfo.type = m_type;
 
-	if (ioctl(m_fd, VIDIOC_DQBUF, &m_bufferInfo) < 0) {
+  if (ioctl(m_fd, VIDIOC_DQBUF, &m_bufferInfo) < 0) {
     printf("Error dequing buffer\n");
     return false;
   }
@@ -237,274 +237,274 @@ bool Camera::GetBuffer()
 
 void Camera::SaveFrame(Mat &frame)
 {
-	vector<uchar> buf;
-	vector<int> params;
+  vector<uchar> buf;
+  vector<int> params;
 
-	params.push_back(CV_IMWRITE_JPEG_QUALITY);
-	params.push_back(g_mp.algorithim.jpgQuality);
+  params.push_back(CV_IMWRITE_JPEG_QUALITY);
+  params.push_back(g_mp.algorithim.jpgQuality);
 
-	imencode(".jpg", frame, buf, params);
+  imencode(".jpg", frame, buf, params);
 
-	pthread_mutex_lock(&g_lock);
-	memcpy(g_frameBuffer, buf.data(), buf.size());
-	g_frameBufferSize = buf.size();
-	g_bNewFrame = true;
-	pthread_mutex_unlock(&g_lock);
+  pthread_mutex_lock(&g_lock);
+  memcpy(g_frameBuffer, buf.data(), buf.size());
+  g_frameBufferSize = buf.size();
+  g_bNewFrame = true;
+  pthread_mutex_unlock(&g_lock);
 }
 
 typedef struct
 {
-	RotatedRect rRect;
-	Rect        bRect;
-	Point2f     rRectPoints[4]; 	
-	float       angle;
+  RotatedRect rRect;
+  Rect        bRect;
+  Point2f     rRectPoints[4]; 	
+  float       angle;
 } TapeData;
 
 typedef struct
 {
-	TapeData left;
-	TapeData right;
-	float    heightRatio;
-	float    distance;
+  TapeData left;
+  TapeData right;
+  float    heightRatio;
+  float    distance;
 } TargetData;
 
 bool XPositionSort(TapeData a, TapeData b) 
 { 
-	return (a.rRect.center.x < b.rRect.center.x);
+  return (a.rRect.center.x < b.rRect.center.x);
 }
 
 void Camera::ProcessFrame(Mat &frame, Mat &source)
 {
-	vector<vector<Point>> contours;
-	vector<Vec4i> 				hierarchy;
+  vector<vector<Point>> contours;
+  vector<Vec4i> 				hierarchy;
 
-	static double s_test = 0;
+  static double s_test = 0;
 
-	g_targetTable->PutNumber("X", s_test++);
+  g_targetTable->PutNumber("X", s_test++);
 
-	findContours(frame, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0));
+  findContours(frame, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0));
 
-	vector<TapeData> tapeVector;
-		
-	for (int i=0; i<contours.size(); i++) {
+  vector<TapeData> tapeVector;
+    
+  for (int i=0; i<contours.size(); i++) {
 
-		TapeData tapeData;
+    TapeData tapeData;
 
-		tapeData.rRect = minAreaRect(Mat(contours[i]));
+    tapeData.rRect = minAreaRect(Mat(contours[i]));
 
-		if (tapeData.rRect.size.width * tapeData.rRect.size.height > g_mp.algorithim.minTapeArea) {
-					
-			tapeData.rRect.points(tapeData.rRectPoints);
-				
-			Point2f edge1 = Vec2f(tapeData.rRectPoints[1].x, tapeData.rRectPoints[1].y) - Vec2f(tapeData.rRectPoints[0].x, tapeData.rRectPoints[0].y);
-			Point2f edge2 = Vec2f(tapeData.rRectPoints[2].x, tapeData.rRectPoints[2].y) - Vec2f(tapeData.rRectPoints[1].x, tapeData.rRectPoints[1].y);
+    if (tapeData.rRect.size.width * tapeData.rRect.size.height > g_mp.algorithim.minTapeArea) {
+          
+      tapeData.rRect.points(tapeData.rRectPoints);
+        
+      Point2f edge1 = Vec2f(tapeData.rRectPoints[1].x, tapeData.rRectPoints[1].y) - Vec2f(tapeData.rRectPoints[0].x, tapeData.rRectPoints[0].y);
+      Point2f edge2 = Vec2f(tapeData.rRectPoints[2].x, tapeData.rRectPoints[2].y) - Vec2f(tapeData.rRectPoints[1].x, tapeData.rRectPoints[1].y);
 
-			Point2f usedEdge = (norm(edge2) > norm(edge1)) ? edge2 : edge1;
-			Point2f reference = Vec2f(1,0);
+      Point2f usedEdge = (norm(edge2) > norm(edge1)) ? edge2 : edge1;
+      Point2f reference = Vec2f(1,0);
 
-			tapeData.angle = 180.0f/CV_PI * acos((reference.x * usedEdge.x + reference.y * usedEdge.y) / (norm(reference) * norm(usedEdge)));	
+      tapeData.angle = 180.0f/CV_PI * acos((reference.x * usedEdge.x + reference.y * usedEdge.y) / (norm(reference) * norm(usedEdge)));	
 
-			if (tapeData.angle >= g_mp.algorithim.minTapeAngle && tapeData.angle <= g_mp.algorithim.maxTapeAngle) {
+      if (tapeData.angle >= g_mp.algorithim.minTapeAngle && tapeData.angle <= g_mp.algorithim.maxTapeAngle) {
 
-				tapeData.bRect = boundingRect(Mat(contours[i]));		
+        tapeData.bRect = boundingRect(Mat(contours[i]));		
 
-				tapeVector.push_back(tapeData);
+        tapeVector.push_back(tapeData);
 
-				if (g_mp.algorithim.displayType == 4) {
+        if (g_mp.algorithim.displayType == 4) {
 
-					for (unsigned int j=0; j<4; ++j)
-						line(source, tapeData.rRectPoints[j], tapeData.rRectPoints[(j + 1) % 4], m_red);
+          for (unsigned int j=0; j<4; ++j)
+            line(source, tapeData.rRectPoints[j], tapeData.rRectPoints[(j + 1) % 4], m_red);
 
-					circle(source, tapeData.rRect.center, 2, m_red);        
-				}
-			}
-  	}	
-	}
+          circle(source, tapeData.rRect.center, 2, m_red);        
+        }
+      }
+    }	
+  }
 
-	std::sort(tapeVector.begin(), tapeVector.end(), XPositionSort);
+  std::sort(tapeVector.begin(), tapeVector.end(), XPositionSort);
 
-	int tapeSize = tapeVector.size();
+  int tapeSize = tapeVector.size();
 
-	vector<TargetData> targets;
+  vector<TargetData> targets;
 
-	for (int l=0; l<tapeSize-1; l++) {
-		
-		if (tapeVector[l].angle < 90.0) {
-			
-			for (int r = l+1; r<tapeSize; r++) {
-				
-				if (tapeVector[r].angle > 90.0) {
+  for (int l=0; l<tapeSize-1; l++) {
+    
+    if (tapeVector[l].angle < 90.0) {
+      
+      for (int r = l+1; r<tapeSize; r++) {
+        
+        if (tapeVector[r].angle > 90.0) {
 
-					float leftHeight  = tapeVector[l].bRect.height;
-					float rightHeight = tapeVector[r].bRect.height;		
-					float heightRatio = rightHeight / leftHeight;
+          float leftHeight  = tapeVector[l].bRect.height;
+          float rightHeight = tapeVector[r].bRect.height;		
+          float heightRatio = rightHeight / leftHeight;
 
-					if (heightRatio >= g_mp.algorithim.minTapeHeightRatio && heightRatio <= g_mp.algorithim.maxTapeHeightRatio) {
-						float yDistance = fabs(tapeVector[l].rRect.center.y - tapeVector[r].rRect.center.y);
-						float yDistanceFactor = yDistance / leftHeight;
+          if (heightRatio >= g_mp.algorithim.minTapeHeightRatio && heightRatio <= g_mp.algorithim.maxTapeHeightRatio) {
+            float yDistance = fabs(tapeVector[l].rRect.center.y - tapeVector[r].rRect.center.y);
+            float yDistanceFactor = yDistance / leftHeight;
 
-						if (yDistanceFactor >= g_mp.algorithim.minTapeYDistRatio && yDistanceFactor <= g_mp.algorithim.maxTapeYDistRatio) {
-							float xDistance = fabs(tapeVector[l].rRect.center.x - tapeVector[r].rRect.center.x);
-							float xDistanceFactor = xDistance / leftHeight;
+            if (yDistanceFactor >= g_mp.algorithim.minTapeYDistRatio && yDistanceFactor <= g_mp.algorithim.maxTapeYDistRatio) {
+              float xDistance = fabs(tapeVector[l].rRect.center.x - tapeVector[r].rRect.center.x);
+              float xDistanceFactor = xDistance / leftHeight;
 
-							if (xDistanceFactor >= g_mp.algorithim.minTapeXDistRatio && xDistanceFactor <= g_mp.algorithim.maxTapeXDistRatio) {
-								TargetData t;
-								t.left = tapeVector[l];
-								t.right = tapeVector[r];
-								t.heightRatio = heightRatio;
-								targets.push_back(t);														
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+              if (xDistanceFactor >= g_mp.algorithim.minTapeXDistRatio && xDistanceFactor <= g_mp.algorithim.maxTapeXDistRatio) {
+                TargetData t;
+                t.left = tapeVector[l];
+                t.right = tapeVector[r];
+                t.heightRatio = heightRatio;
+                targets.push_back(t);														
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
-	const float tapeWidth   = 14.5;
-	const float screenWidth = 640.0;			
-	const float tan35       = tan(2.0 * 3.141592654 * (35.0 / 360.0));
+  const float tapeWidth   = 14.5;
+  const float screenWidth = 640.0;			
+  const float tan35       = tan(2.0 * 3.141592654 * (35.0 / 360.0));
 
-	for (int i=0; i<targets.size(); i++) {
-			float pixelWidth    = targets[i].right.bRect.br().x - targets[i].left.bRect.tl().x;
-			float side          = (tapeWidth * screenWidth) / (2.0 * pixelWidth);
-			targets[i].distance = side / tan35;
-	}
+  for (int i=0; i<targets.size(); i++) {
+      float pixelWidth    = targets[i].right.bRect.br().x - targets[i].left.bRect.tl().x;
+      float side          = (tapeWidth * screenWidth) / (2.0 * pixelWidth);
+      targets[i].distance = side / tan35;
+  }
 
-	if (g_mp.algorithim.displayType == 5) {
-		for (unsigned int i = 0; i < targets.size();i++) {			
-			rectangle(source, targets[i].left.bRect.tl(), targets[i].right.bRect.br(), cv::Scalar(0, 255, 0));
-			line(source, targets[i].left.rRectPoints[0], targets[i].right.rRectPoints[0], m_red);
-			line(source, targets[i].left.rRectPoints[3], targets[i].right.rRectPoints[1], m_red);
-			char text[32];
-			sprintf(text, "%.3f, %.3f", targets[i].distance, targets[i].heightRatio);
-			putText(source, text, targets[i].left.bRect.tl(), FONT_HERSHEY_PLAIN, 1.0, Scalar(0, 0, 0));			
-		}
-	}
+  if (g_mp.algorithim.displayType == 5) {
+    for (unsigned int i = 0; i < targets.size();i++) {			
+      rectangle(source, targets[i].left.bRect.tl(), targets[i].right.bRect.br(), cv::Scalar(0, 255, 0));
+      line(source, targets[i].left.rRectPoints[0], targets[i].right.rRectPoints[0], m_red);
+      line(source, targets[i].left.rRectPoints[3], targets[i].right.rRectPoints[1], m_red);
+      char text[32];
+      sprintf(text, "%.3f, %.3f", targets[i].distance, targets[i].heightRatio);
+      putText(source, text, targets[i].left.bRect.tl(), FONT_HERSHEY_PLAIN, 1.0, Scalar(0, 0, 0));			
+    }
+  }
 
-	if (g_mp.algorithim.displayType > 3)
-		SaveFrame(source);
+  if (g_mp.algorithim.displayType > 3)
+    SaveFrame(source);
 }
 
 void ErodeDilate(Mat &input, Mat &output)
 {
-	Mat mat1, mat2;
+  Mat mat1, mat2;
 
-	if (g_mp.algorithim.erode == 0) {
-		if (g_mp.algorithim.dilate == 0) {
-			output = input;
-			return;
-		}
-		Mat dilateElement = getStructuringElement(MORPH_RECT, Size(g_mp.algorithim.dilate, g_mp.algorithim.dilate));
+  if (g_mp.algorithim.erode == 0) {
+    if (g_mp.algorithim.dilate == 0) {
+      output = input;
+      return;
+    }
+    Mat dilateElement = getStructuringElement(MORPH_RECT, Size(g_mp.algorithim.dilate, g_mp.algorithim.dilate));
 
-		dilate(input, mat1,  dilateElement);
-		dilate(mat1, output, dilateElement);
-	}
-	else {
-		if (g_mp.algorithim.dilate == 0) {		
-			Mat erodeElement  = getStructuringElement(MORPH_RECT, Size(g_mp.algorithim.erode, g_mp.algorithim.erode));
+    dilate(input, mat1,  dilateElement);
+    dilate(mat1, output, dilateElement);
+  }
+  else {
+    if (g_mp.algorithim.dilate == 0) {		
+      Mat erodeElement  = getStructuringElement(MORPH_RECT, Size(g_mp.algorithim.erode, g_mp.algorithim.erode));
 
-			erode(input, mat1, erodeElement);
-			erode(mat1,  output, erodeElement);		
-		}
-		else {		
-			Mat erodeElement  = getStructuringElement(MORPH_RECT, Size(g_mp.algorithim.erode, g_mp.algorithim.erode));
+      erode(input, mat1, erodeElement);
+      erode(mat1,  output, erodeElement);		
+    }
+    else {		
+      Mat erodeElement  = getStructuringElement(MORPH_RECT, Size(g_mp.algorithim.erode, g_mp.algorithim.erode));
 
-			erode(input, mat1, erodeElement);
-			erode(mat1,  mat2, erodeElement);		
+      erode(input, mat1, erodeElement);
+      erode(mat1,  mat2, erodeElement);		
 
-			Mat dilateElement = getStructuringElement(MORPH_RECT, Size(g_mp.algorithim.dilate, g_mp.algorithim.dilate));
+      Mat dilateElement = getStructuringElement(MORPH_RECT, Size(g_mp.algorithim.dilate, g_mp.algorithim.dilate));
 
-			dilate(mat2, mat1,   dilateElement);
-			dilate(mat1, output, dilateElement);
-		}
-	}
+      dilate(mat2, mat1,   dilateElement);
+      dilate(mat1, output, dilateElement);
+    }
+  }
 }
 
 void Camera::ProcessBuffer()
 {
   if (g_mp.algorithim.displayType == 0) {
-	  pthread_mutex_lock(&g_lock);
-		if (!g_bSimActive) {
-			memcpy(g_frameBuffer, m_frameBuffer[m_bufferInfo.index].data, m_bufferInfo.bytesused);
-			g_frameBufferSize = m_bufferInfo.bytesused;
-		} 
-		else {
-			memcpy(g_frameBuffer, m_simFrame, m_simFrameLength);
-			g_frameBufferSize = m_simFrameLength;
-		}
-		g_bNewFrame = true;
-		pthread_mutex_unlock(&g_lock);
-	}
-
-	Mat mjpegData(1, g_bSimActive ? m_simFrameLength : m_bufferInfo.bytesused, CV_8UC1, g_bSimActive ? m_simFrame : m_frameBuffer[m_bufferInfo.index].data);
-		
-  Mat data = imdecode(mjpegData, -1);
-		
-	if (data.data != NULL) {
-		Mat grayFrame, hsvFrame, blurData, erodeDilateData;
-
-		int kernelSzie = g_mp.algorithim.blur * 2 + 1;
-
-		GaussianBlur(data, blurData, Size(kernelSzie, kernelSzie), 0, 0 );	
-		
-		if (g_mp.algorithim.displayType == 1)
-			SaveFrame(blurData);
-
-		ErodeDilate(blurData, erodeDilateData);
-
-		if (g_mp.algorithim.displayType == 2)
-			SaveFrame(erodeDilateData);
-
-		bool bContinue = true;
-			
-		if (g_mp.algorithim.colorSpace == 1) {			
-			try {
-				cvtColor(erodeDilateData, hsvFrame, COLOR_BGR2HSV);	
-			}
-			catch( Exception& e )
-			{
-    		//const char* err_msg = e.what();
-    		//printf("%s\n", err_msg);
-				return;
-			}
-	   	inRange(hsvFrame, Scalar(g_mp.algorithim.minRed, g_mp.algorithim.minGreen, g_mp.algorithim.minBlue), Scalar(g_mp.algorithim.maxRed, g_mp.algorithim.maxGreen, g_mp.algorithim.maxBlue), grayFrame);		
-		}
-		else
-			inRange(erodeDilateData, Scalar(g_mp.algorithim.minRed, g_mp.algorithim.minGreen, g_mp.algorithim.minBlue), Scalar(g_mp.algorithim.maxRed, g_mp.algorithim.maxGreen, g_mp.algorithim.maxBlue), grayFrame);
-
-		if (g_mp.algorithim.displayType == 3)
-			SaveFrame(grayFrame);
-
-		ProcessFrame(grayFrame, data);
+    pthread_mutex_lock(&g_lock);
+    if (!g_bSimActive) {
+      memcpy(g_frameBuffer, m_frameBuffer[m_bufferInfo.index].data, m_bufferInfo.bytesused);
+      g_frameBufferSize = m_bufferInfo.bytesused;
+    } 
+    else {
+      memcpy(g_frameBuffer, m_simFrame, m_simFrameLength);
+      g_frameBufferSize = m_simFrameLength;
+    }
+    g_bNewFrame = true;
+    pthread_mutex_unlock(&g_lock);
   }
 
-	g_frameCount++;
+  Mat mjpegData(1, g_bSimActive ? m_simFrameLength : m_bufferInfo.bytesused, CV_8UC1, g_bSimActive ? m_simFrame : m_frameBuffer[m_bufferInfo.index].data);
+    
+  Mat data = imdecode(mjpegData, -1);
+    
+  if (data.data != NULL) {
+    Mat grayFrame, hsvFrame, blurData, erodeDilateData;
+
+    int kernelSzie = g_mp.algorithim.blur * 2 + 1;
+
+    GaussianBlur(data, blurData, Size(kernelSzie, kernelSzie), 0, 0 );	
+    
+    if (g_mp.algorithim.displayType == 1)
+      SaveFrame(blurData);
+
+    ErodeDilate(blurData, erodeDilateData);
+
+    if (g_mp.algorithim.displayType == 2)
+      SaveFrame(erodeDilateData);
+
+    bool bContinue = true;
+      
+    if (g_mp.algorithim.colorSpace == 1) {			
+      try {
+        cvtColor(erodeDilateData, hsvFrame, COLOR_BGR2HSV);	
+      }
+      catch( Exception& e )
+      {
+        //const char* err_msg = e.what();
+        //printf("%s\n", err_msg);
+        return;
+      }
+       inRange(hsvFrame, Scalar(g_mp.algorithim.minRed, g_mp.algorithim.minGreen, g_mp.algorithim.minBlue), Scalar(g_mp.algorithim.maxRed, g_mp.algorithim.maxGreen, g_mp.algorithim.maxBlue), grayFrame);		
+    }
+    else
+      inRange(erodeDilateData, Scalar(g_mp.algorithim.minRed, g_mp.algorithim.minGreen, g_mp.algorithim.minBlue), Scalar(g_mp.algorithim.maxRed, g_mp.algorithim.maxGreen, g_mp.algorithim.maxBlue), grayFrame);
+
+    if (g_mp.algorithim.displayType == 3)
+      SaveFrame(grayFrame);
+
+    ProcessFrame(grayFrame, data);
+  }
+
+  g_frameCount++;
 }
 
 bool GetSimFrame(char *pSimFrame, int &length);
 
 bool Camera::GetSimBuffer()
 {
-	do {
-		if (g_bSimFrameReady) {			
-			if (GetSimFrame(m_simFrame, m_simFrameLength)) {
-				g_bSimFrameReady = false;
-				return true;			
-			}
-		}
+  do {
+    if (g_bSimFrameReady) {			
+      if (GetSimFrame(m_simFrame, m_simFrameLength)) {
+        g_bSimFrameReady = false;
+        return true;			
+      }
+    }
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-	} while (1);
+  } while (1);
 
-	return false;
+  return false;
 }
 
 bool Camera::ReturnBuffer()
 {
-		if (ioctl(m_fd, VIDIOC_QBUF, &m_bufferInfo) < 0)
+    if (ioctl(m_fd, VIDIOC_QBUF, &m_bufferInfo) < 0)
       return false;
 
     return true;
@@ -512,96 +512,96 @@ bool Camera::ReturnBuffer()
 
 void Camera::StreamOff()
 {
-	if (ioctl(m_fd, VIDIOC_STREAMOFF, &m_type) < 0)
-		printf("Error turning off streaming\n");
+  if (ioctl(m_fd, VIDIOC_STREAMOFF, &m_type) < 0)
+    printf("Error turning off streaming\n");
 
-	for (int i = 0; i<BUF_COUNT; i++) {
-		if (m_frameBuffer[i].data) {
-			munmap(m_frameBuffer[i].data, m_frameBuffer[i].info.length);
-			m_frameBuffer[i].data = NULL;
-		}
-	}
+  for (int i = 0; i<BUF_COUNT; i++) {
+    if (m_frameBuffer[i].data) {
+      munmap(m_frameBuffer[i].data, m_frameBuffer[i].info.length);
+      m_frameBuffer[i].data = NULL;
+    }
+  }
 
   if (m_fd) {
     close(m_fd);
-		m_fd = 0;
-	}
+    m_fd = 0;
+  }
 }
 
 void Camera::CheckParams()
 {
-	printf("Checking params ...\n");
+  printf("Checking params ...\n");
 
-	if (g_mp.camera.autoExposure != m_params.autoExposure) {
-		printf("Setting auto exposure to %d\n", g_mp.camera.autoExposure);
-		SetCamParam(V4L2_CID_EXPOSURE_AUTO, g_mp.camera.autoExposure, "Auto Exposure");
-	}
+  if (g_mp.camera.autoExposure != m_params.autoExposure) {
+    printf("Setting auto exposure to %d\n", g_mp.camera.autoExposure);
+    SetCamParam(V4L2_CID_EXPOSURE_AUTO, g_mp.camera.autoExposure, "Auto Exposure");
+  }
 
-	if (g_mp.camera.exposureAbsolute != m_params.exposureAbsolute) {		
-		printf("Setting absolute exposure to %d\n", g_mp.camera.exposureAbsolute);
-		SetCamParam(V4L2_CID_EXPOSURE_ABSOLUTE, g_mp.camera.exposureAbsolute, "Absolute Exposure");
-	}
+  if (g_mp.camera.exposureAbsolute != m_params.exposureAbsolute) {		
+    printf("Setting absolute exposure to %d\n", g_mp.camera.exposureAbsolute);
+    SetCamParam(V4L2_CID_EXPOSURE_ABSOLUTE, g_mp.camera.exposureAbsolute, "Absolute Exposure");
+  }
 
-	if (g_mp.camera.autoWhiteBalance != m_params.autoWhiteBalance) {		
-		printf("Setting auto whtie balance to %d\n", g_mp.camera.autoWhiteBalance);
-		SetCamParam(V4L2_CID_AUTO_WHITE_BALANCE, g_mp.camera.autoWhiteBalance, "Auto White Balance");
-	}
+  if (g_mp.camera.autoWhiteBalance != m_params.autoWhiteBalance) {		
+    printf("Setting auto whtie balance to %d\n", g_mp.camera.autoWhiteBalance);
+    SetCamParam(V4L2_CID_AUTO_WHITE_BALANCE, g_mp.camera.autoWhiteBalance, "Auto White Balance");
+  }
 
-	if (g_mp.camera.whiteBalanceTemperature != m_params.whiteBalanceTemperature) {	
-		printf("Setting white balance temperature to %d\n", g_mp.camera.whiteBalanceTemperature);
-		SetCamParam(V4L2_CID_WHITE_BALANCE_TEMPERATURE, g_mp.camera.whiteBalanceTemperature, "White Balance Temperature");
-	}
+  if (g_mp.camera.whiteBalanceTemperature != m_params.whiteBalanceTemperature) {	
+    printf("Setting white balance temperature to %d\n", g_mp.camera.whiteBalanceTemperature);
+    SetCamParam(V4L2_CID_WHITE_BALANCE_TEMPERATURE, g_mp.camera.whiteBalanceTemperature, "White Balance Temperature");
+  }
 
-	if (g_mp.camera.brightness != m_params.brightness) {		
-		printf("Setting brightness to %d\n", g_mp.camera.brightness);
-		SetCamParam(V4L2_CID_BRIGHTNESS, g_mp.camera.brightness, "Brightness");
-	}
+  if (g_mp.camera.brightness != m_params.brightness) {		
+    printf("Setting brightness to %d\n", g_mp.camera.brightness);
+    SetCamParam(V4L2_CID_BRIGHTNESS, g_mp.camera.brightness, "Brightness");
+  }
 
-	if (g_mp.camera.gain != m_params.gain) {		
-		printf("Setting gain to %d\n", g_mp.camera.gain);
-		SetCamParam(V4L2_CID_GAIN, g_mp.camera.gain, "Gain");
-	}
+  if (g_mp.camera.gain != m_params.gain) {		
+    printf("Setting gain to %d\n", g_mp.camera.gain);
+    SetCamParam(V4L2_CID_GAIN, g_mp.camera.gain, "Gain");
+  }
 
-	if (g_mp.camera.autoFocus != m_params.autoFocus) {	
-		printf("Setting auto focus to %d\n", g_mp.camera.autoFocus);
-		SetCamParam(V4L2_CID_FOCUS_AUTO, g_mp.camera.autoFocus, "Auto Focus");
-	}	
+  if (g_mp.camera.autoFocus != m_params.autoFocus) {	
+    printf("Setting auto focus to %d\n", g_mp.camera.autoFocus);
+    SetCamParam(V4L2_CID_FOCUS_AUTO, g_mp.camera.autoFocus, "Auto Focus");
+  }	
 
-	if (g_mp.camera.zoom != m_params.zoom) {	
-		printf("Setting zoom to %d\n", g_mp.camera.zoom);
-		SetCamParam(V4L2_CID_ZOOM_ABSOLUTE, g_mp.camera.zoom, "Zoom");
-	}
+  if (g_mp.camera.zoom != m_params.zoom) {	
+    printf("Setting zoom to %d\n", g_mp.camera.zoom);
+    SetCamParam(V4L2_CID_ZOOM_ABSOLUTE, g_mp.camera.zoom, "Zoom");
+  }
 
-	if (g_mp.camera.contrast != m_params.contrast) {	
-		printf("Setting contrast to %d\n", g_mp.camera.contrast);
-		SetCamParam(V4L2_CID_CONTRAST, g_mp.camera.contrast, "Contrast");
-	}
+  if (g_mp.camera.contrast != m_params.contrast) {	
+    printf("Setting contrast to %d\n", g_mp.camera.contrast);
+    SetCamParam(V4L2_CID_CONTRAST, g_mp.camera.contrast, "Contrast");
+  }
 
-	if (g_mp.camera.sharpness != m_params.sharpness) {	
-		printf("Setting sharpness to %d\n", g_mp.camera.sharpness);
-		SetCamParam(V4L2_CID_SHARPNESS, g_mp.camera.sharpness, "Sharpness");
-	}
+  if (g_mp.camera.sharpness != m_params.sharpness) {	
+    printf("Setting sharpness to %d\n", g_mp.camera.sharpness);
+    SetCamParam(V4L2_CID_SHARPNESS, g_mp.camera.sharpness, "Sharpness");
+  }
 
-	if (g_mp.camera.saturation != m_params.saturation) {	
-		printf("Setting saturation to %d\n", g_mp.camera.saturation);
-		SetCamParam(V4L2_CID_SATURATION, g_mp.camera.saturation, "Saturation");
-	}	
+  if (g_mp.camera.saturation != m_params.saturation) {	
+    printf("Setting saturation to %d\n", g_mp.camera.saturation);
+    SetCamParam(V4L2_CID_SATURATION, g_mp.camera.saturation, "Saturation");
+  }	
 
-	if (g_mp.camera.focus != m_params.focus) {	
-		printf("Setting focus to %d\n", g_mp.camera.focus);
-		SetCamParam(V4L2_CID_FOCUS_ABSOLUTE, g_mp.camera.focus, "Focus");
-	}						
+  if (g_mp.camera.focus != m_params.focus) {	
+    printf("Setting focus to %d\n", g_mp.camera.focus);
+    SetCamParam(V4L2_CID_FOCUS_ABSOLUTE, g_mp.camera.focus, "Focus");
+  }						
 
-	m_params = g_mp.camera;
+  m_params = g_mp.camera;
 }
 
 void Camera::Run()
 {
-	int loopCount = 0;
+  int loopCount = 0;
 
   StreamOn();
 
-	do	{
+  do	{
     if (!GetBuffer())
       break;
 
@@ -610,37 +610,37 @@ void Camera::Run()
     if (!ReturnBuffer()) 
       break;
 
-		if (g_mp.NewProperties())
-			CheckParams();
+    if (g_mp.NewProperties())
+      CheckParams();
 
-	} while (!g_bStopThreads);
+  } while (!g_bStopThreads);
 
   StreamOff();
 
-	printf("Camera thread terminated\n");
+  printf("Camera thread terminated\n");
 }
 
 void Camera::RunSim()
 {
-	int loopCount = 0;
+  int loopCount = 0;
 
-	do	{
+  do	{
     if (!GetSimBuffer())
       break;
 
     ProcessBuffer();
 
-	} while (!g_bStopThreads);
+  } while (!g_bStopThreads);
 
-	printf("Camera thread terminated\n");
+  printf("Camera thread terminated\n");
 }
 
 void CameraThread()
 {
   Camera camera;
 
-	if (g_bSimActive)
-		camera.RunSim();
-	else
-  	camera.Run();
+  if (g_bSimActive)
+    camera.RunSim();
+  else
+    camera.Run();
 }
