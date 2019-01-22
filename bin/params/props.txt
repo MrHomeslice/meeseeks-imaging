@@ -1,13 +1,20 @@
 // Algorithim Parameters
 
-algorithim-display-type=3
+algorithim-display-type=4
  
-algorithim-min-green=118
-algorithim-max-green=233
-algorithim-min-red=22
-algorithim-max-red=89
-algorithim-min-blue=114
-algorithim-max-blue=146
+algorithim-min-green=108
+algorithim-max-green=229
+algorithim-min-red=33
+algorithim-max-red=90
+algorithim-min-blue=117
+algorithim-max-blue=149
+
+algorithim-min-green-floor=128
+algorithim-max-green-floor=229
+algorithim-min-red-floor=95
+algorithim-max-red-floor=148
+algorithim-min-blue-floor=229
+algorithim-max-blue-floor=255
 
 algorithim-min-width=10
 algorithim-max-width=100
@@ -28,7 +35,7 @@ camera-white-balance-temperature=4002
 algorithim-blur=0
 algorithim-color-space=1
 camera-server-port=5801
-//network-table-address=10.74.0.2
+//network-table-address=10.74.0.101
 network-table-address=192.168.1.6
 algorithim-dilate=0
 algorithim-erode=0
@@ -51,3 +58,5 @@ algorithim-min-tape-y-dist-ratio=0.000000
 
 //Misc params
 simulation-active=1
+algorithim-color-space-floor=1
+algorithim-processing-type=2

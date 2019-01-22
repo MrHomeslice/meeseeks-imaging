@@ -16,21 +16,23 @@ typedef set<string>					StringSet;
 
 typedef struct {
   int displayType;
+  int processingType;
   int minWidth;
   int minHeight;
   int maxWidth;
   int maxHeight;
-  int minRed, maxRed;
-  int minGreen, maxGreen;
-  int minBlue, maxBlue;
+  int minRed[2], maxRed[2];
+  int minGreen[2], maxGreen[2];
+  int minBlue[2], maxBlue[2]; 
   int jpgQuality;
-  int colorSpace;
+  int colorSpace[2];
   int blur;
   int erode;
   int dilate;
   int minTapeArea;
   int minTapeAngle;
   int maxTapeAngle;
+  int minFloorArea;
   double minTapeHeightRatio;
   double maxTapeHeightRatio;
   double minTapeYDistRatio;
@@ -54,22 +56,31 @@ typedef struct {
    int focus;
 } CameraParams;
 
-#define ALGORITHIM_DISPLAY_TYPE  "algorithim-display-type"
-#define ALGORITHIM_MIN_WIDTH  	 "algorithim-min-width"
-#define ALGORITHIM_MIN_HEIGHT    "algorithim-min-height"
-#define ALGORITHIM_MAX_WIDTH     "algorithim-max-width"
-#define ALGORITHIM_MAX_HEIGHT    "algorithim-max-height"
-#define ALGORITHIM_MIN_RED       "algorithim-min-red"
-#define ALGORITHIM_MIN_GREEN     "algorithim-min-green"
-#define ALGORITHIM_MIN_BLUE      "algorithim-min-blue"
-#define ALGORITHIM_MAX_RED       "algorithim-max-red"
-#define ALGORITHIM_MAX_GREEN     "algorithim-max-green"
-#define ALGORITHIM_MAX_BLUE      "algorithim-max-blue"
-#define ALGORITHIM_JPEG_QUALITY  "algorithim-jpeg-quality"
-#define ALGORITHIM_COLOR_SPACE   "algorithim-color-space"
-#define ALGORITHIM_BLUR          "algorithim-blur"
-#define ALGORITHIM_ERODE         "algorithim-erode"
-#define ALGORITHIM_DILATE        "algorithim-dilate"
+#define ALGORITHIM_DISPLAY_TYPE    "algorithim-display-type"
+#define ALGORITHIM_PROCESSING_TYPE "algorithim-processing-type"
+#define ALGORITHIM_MIN_WIDTH  	   "algorithim-min-width"
+#define ALGORITHIM_MIN_HEIGHT      "algorithim-min-height"
+#define ALGORITHIM_MAX_WIDTH       "algorithim-max-width"
+#define ALGORITHIM_MAX_HEIGHT      "algorithim-max-height"
+#define ALGORITHIM_MIN_RED         "algorithim-min-red"
+#define ALGORITHIM_MIN_GREEN       "algorithim-min-green"
+#define ALGORITHIM_MIN_BLUE        "algorithim-min-blue"
+#define ALGORITHIM_MAX_RED         "algorithim-max-red"
+#define ALGORITHIM_MAX_GREEN       "algorithim-max-green"
+#define ALGORITHIM_MAX_BLUE        "algorithim-max-blue"
+#define ALGORITHIM_JPEG_QUALITY    "algorithim-jpeg-quality"
+#define ALGORITHIM_COLOR_SPACE     "algorithim-color-space"
+#define ALGORITHIM_BLUR            "algorithim-blur"
+#define ALGORITHIM_ERODE           "algorithim-erode"
+#define ALGORITHIM_DILATE          "algorithim-dilate"
+
+#define ALGORITHIM_MIN_RED_FLOOR       "algorithim-min-red-floor"
+#define ALGORITHIM_MIN_GREEN_FLOOR     "algorithim-min-green-floor"
+#define ALGORITHIM_MIN_BLUE_FLOOR      "algorithim-min-blue-floor"
+#define ALGORITHIM_MAX_RED_FLOOR       "algorithim-max-red-floor"
+#define ALGORITHIM_MAX_GREEN_FLOOR     "algorithim-max-green-floor"
+#define ALGORITHIM_MAX_BLUE_FLOOR      "algorithim-max-blue-floor"
+#define ALGORITHIM_COLOR_SPACE_FLOOR   "algorithim-color-space-floor" 
 
 #define ALGORITHIM_MIN_TAPE_AREA         "algorithim-min-tape-area"
 #define ALGORITHIM_MIN_TAPE_ANGLE        "algorithim-min-tape-angle"
@@ -81,22 +92,31 @@ typedef struct {
 #define ALGORITHIM_MIN_TAPE_X_DIST_RATIO "algorithim-min-tape-x-dist-ratio"
 #define ALGORITHIM_MAX_TAPE_X_DIST_RATIO "algorithim-max-tape-x-dist-ratio"
 
-#define ALGORITHIM_DEFAULT_DISPLAY_TYPE  1
-#define ALGORITHIM_DEFAULT_MIN_WIDTH     10
-#define ALGORITHIM_DEFAULT_MIN_HEIGHT    10
-#define ALGORITHIM_DEFAULT_MAX_WIDTH     100
-#define ALGORITHIM_DEFAULT_MAX_HEIGHT    100
-#define ALGORITHIM_DEFAULT_MIN_RED       0
-#define ALGORITHIM_DEFAULT_MIN_GREEN     0
-#define ALGORITHIM_DEFAULT_MIN_BLUE      0
-#define ALGORITHIM_DEFAULT_MAX_RED       255
-#define ALGORITHIM_DEFAULT_MAX_GREEN     255
-#define ALGORITHIM_DEFAULT_MAX_BLUE      255
-#define ALGORITHIM_DEFAULT_JPEG_QUALITY  100
-#define ALGORITHIM_DEFAULT_COLOR_SPACE   0
-#define ALGORITHIM_DEFAULT_BLUR          3
-#define ALGORITHIM_DEFAULT_ERODE         3
-#define ALGORITHIM_DEFAULT_DILATE        3
+#define ALGORITHIM_DEFAULT_DISPLAY_TYPE      1
+#define ALGORITHIM_DEFAULT_PROCESSING_TYPE   1
+#define ALGORITHIM_DEFAULT_MIN_WIDTH        10
+#define ALGORITHIM_DEFAULT_MIN_HEIGHT       10
+#define ALGORITHIM_DEFAULT_MAX_WIDTH       100
+#define ALGORITHIM_DEFAULT_MAX_HEIGHT      100
+#define ALGORITHIM_DEFAULT_MIN_RED           0
+#define ALGORITHIM_DEFAULT_MIN_GREEN         0
+#define ALGORITHIM_DEFAULT_MIN_BLUE          0
+#define ALGORITHIM_DEFAULT_MAX_RED         255
+#define ALGORITHIM_DEFAULT_MAX_GREEN       255
+#define ALGORITHIM_DEFAULT_MAX_BLUE        255
+#define ALGORITHIM_DEFAULT_JPEG_QUALITY    100
+#define ALGORITHIM_DEFAULT_COLOR_SPACE       0
+#define ALGORITHIM_DEFAULT_BLUR              3
+#define ALGORITHIM_DEFAULT_ERODE             3
+#define ALGORITHIM_DEFAULT_DILATE            3
+
+#define ALGORITHIM_DEFAULT_MIN_RED_FLOOR       81
+#define ALGORITHIM_DEFAULT_MIN_GREEN_FLOOR     148
+#define ALGORITHIM_DEFAULT_MIN_BLUE_FLOOR      128
+#define ALGORITHIM_DEFAULT_MAX_RED_FLOOR       229
+#define ALGORITHIM_DEFAULT_MAX_GREEN_FLOOR     229
+#define ALGORITHIM_DEFAULT_MAX_BLUE_FLOOR      255
+#define ALGORITHIM_DEFAULT_COLOR_SPACE_FLOOR   0
 
 #define ALGORITHIM_DEFAULT_MIN_TAPE_AREA         200
 #define ALGORITHIM_DEFAULT_MIN_TAPE_ANGLE         65

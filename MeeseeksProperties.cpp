@@ -76,22 +76,31 @@ void MeeseeksProperties::SetProperties()
   camera.sharpness               = GetInt(CAMERA_SHARPNESS,          CAMERA_DEFAULT_SHARPNESS);
   camera.focus                   = GetInt(CAMERA_FOCUS,              CAMERA_DEFAULT_FOCUS);
 
-  algorithim.displayType = GetInt(ALGORITHIM_DISPLAY_TYPE,  ALGORITHIM_DEFAULT_DISPLAY_TYPE);
-  algorithim.minWidth    = GetInt(ALGORITHIM_MIN_WIDTH,     ALGORITHIM_DEFAULT_MIN_WIDTH);
-  algorithim.minHeight   = GetInt(ALGORITHIM_MIN_HEIGHT,    ALGORITHIM_DEFAULT_MIN_HEIGHT);
-  algorithim.maxWidth    = GetInt(ALGORITHIM_MAX_WIDTH,     ALGORITHIM_DEFAULT_MAX_WIDTH);
-  algorithim.maxHeight   = GetInt(ALGORITHIM_MAX_HEIGHT,    ALGORITHIM_DEFAULT_MAX_HEIGHT);
-  algorithim.minRed      = GetInt(ALGORITHIM_MIN_RED,       ALGORITHIM_DEFAULT_MIN_RED);
-  algorithim.maxRed      = GetInt(ALGORITHIM_MAX_RED,       ALGORITHIM_DEFAULT_MAX_RED);
-  algorithim.minGreen    = GetInt(ALGORITHIM_MIN_GREEN,     ALGORITHIM_DEFAULT_MIN_GREEN);
-  algorithim.maxGreen    = GetInt(ALGORITHIM_MAX_GREEN,     ALGORITHIM_DEFAULT_MAX_GREEN);
-  algorithim.minBlue     = GetInt(ALGORITHIM_MIN_BLUE,      ALGORITHIM_DEFAULT_MIN_BLUE);
-  algorithim.maxBlue     = GetInt(ALGORITHIM_MAX_BLUE,      ALGORITHIM_DEFAULT_MAX_BLUE);
-  algorithim.jpgQuality  = GetInt(ALGORITHIM_JPEG_QUALITY,  ALGORITHIM_DEFAULT_JPEG_QUALITY);
-  algorithim.colorSpace  = GetInt(ALGORITHIM_COLOR_SPACE,   ALGORITHIM_DEFAULT_COLOR_SPACE);	
-  algorithim.blur        = GetInt(ALGORITHIM_BLUR,          ALGORITHIM_DEFAULT_BLUR);
-  algorithim.erode       = GetInt(ALGORITHIM_ERODE,         ALGORITHIM_DEFAULT_ERODE);
-  algorithim.dilate      = GetInt(ALGORITHIM_DILATE,        ALGORITHIM_DEFAULT_DILATE);
+  algorithim.displayType    = GetInt(ALGORITHIM_DISPLAY_TYPE,    ALGORITHIM_DEFAULT_DISPLAY_TYPE);
+  algorithim.processingType = GetInt(ALGORITHIM_PROCESSING_TYPE, ALGORITHIM_DEFAULT_PROCESSING_TYPE);
+  algorithim.minWidth       = GetInt(ALGORITHIM_MIN_WIDTH,       ALGORITHIM_DEFAULT_MIN_WIDTH);
+  algorithim.minHeight      = GetInt(ALGORITHIM_MIN_HEIGHT,      ALGORITHIM_DEFAULT_MIN_HEIGHT);
+  algorithim.maxWidth       = GetInt(ALGORITHIM_MAX_WIDTH,       ALGORITHIM_DEFAULT_MAX_WIDTH);
+  algorithim.maxHeight      = GetInt(ALGORITHIM_MAX_HEIGHT,      ALGORITHIM_DEFAULT_MAX_HEIGHT);
+  algorithim.minRed[0]      = GetInt(ALGORITHIM_MIN_RED,         ALGORITHIM_DEFAULT_MIN_RED);
+  algorithim.maxRed[0]      = GetInt(ALGORITHIM_MAX_RED,         ALGORITHIM_DEFAULT_MAX_RED);
+  algorithim.minGreen[0]    = GetInt(ALGORITHIM_MIN_GREEN,       ALGORITHIM_DEFAULT_MIN_GREEN);
+  algorithim.maxGreen[0]    = GetInt(ALGORITHIM_MAX_GREEN,       ALGORITHIM_DEFAULT_MAX_GREEN);
+  algorithim.minBlue[0]     = GetInt(ALGORITHIM_MIN_BLUE,        ALGORITHIM_DEFAULT_MIN_BLUE);
+  algorithim.maxBlue[0]     = GetInt(ALGORITHIM_MAX_BLUE,        ALGORITHIM_DEFAULT_MAX_BLUE);
+  algorithim.jpgQuality     = GetInt(ALGORITHIM_JPEG_QUALITY,    ALGORITHIM_DEFAULT_JPEG_QUALITY);
+  algorithim.colorSpace[0]  = GetInt(ALGORITHIM_COLOR_SPACE,     ALGORITHIM_DEFAULT_COLOR_SPACE);	
+  algorithim.blur           = GetInt(ALGORITHIM_BLUR,            ALGORITHIM_DEFAULT_BLUR);
+  algorithim.erode          = GetInt(ALGORITHIM_ERODE,           ALGORITHIM_DEFAULT_ERODE);
+  algorithim.dilate         = GetInt(ALGORITHIM_DILATE,          ALGORITHIM_DEFAULT_DILATE);
+
+  algorithim.minRed[1]     = GetInt(ALGORITHIM_MIN_RED_FLOOR,       ALGORITHIM_DEFAULT_MIN_RED_FLOOR);
+  algorithim.maxRed[1]     = GetInt(ALGORITHIM_MAX_RED_FLOOR,       ALGORITHIM_DEFAULT_MAX_RED_FLOOR);
+  algorithim.minGreen[1]   = GetInt(ALGORITHIM_MIN_GREEN_FLOOR,     ALGORITHIM_DEFAULT_MIN_GREEN_FLOOR);
+  algorithim.maxGreen[1]   = GetInt(ALGORITHIM_MAX_GREEN_FLOOR,     ALGORITHIM_DEFAULT_MAX_GREEN_FLOOR);
+  algorithim.minBlue[1]    = GetInt(ALGORITHIM_MIN_BLUE_FLOOR,      ALGORITHIM_DEFAULT_MIN_BLUE_FLOOR);
+  algorithim.maxBlue[1]    = GetInt(ALGORITHIM_MAX_BLUE_FLOOR,      ALGORITHIM_DEFAULT_MAX_BLUE_FLOOR);  
+  algorithim.colorSpace[1] = GetInt(ALGORITHIM_COLOR_SPACE_FLOOR,   ALGORITHIM_DEFAULT_COLOR_SPACE_FLOOR);
   
   algorithim.minTapeArea        = GetInt(ALGORITHIM_MIN_TAPE_AREA, ALGORITHIM_DEFAULT_MIN_TAPE_AREA);	
   algorithim.minTapeAngle       = GetInt(ALGORITHIM_MIN_TAPE_ANGLE, ALGORITHIM_DEFAULT_MIN_TAPE_ANGLE);
@@ -102,6 +111,8 @@ void MeeseeksProperties::SetProperties()
   algorithim.maxTapeYDistRatio  = GetDouble(ALGORITHIM_MAX_TAPE_Y_DIST_RATIO, ALGORITHIM_DEFAULT_MAX_TAPE_Y_DIST_RATIO);
   algorithim.minTapeXDistRatio  = GetDouble(ALGORITHIM_MIN_TAPE_X_DIST_RATIO, ALGORITHIM_DEFAULT_MIN_TAPE_X_DIST_RATIO);
   algorithim.maxTapeXDistRatio  = GetDouble(ALGORITHIM_MAX_TAPE_X_DIST_RATIO, ALGORITHIM_DEFAULT_MAX_TAPE_X_DIST_RATIO);
+
+  algorithim.minFloorArea = 100;
 
   serverPort          = GetInt(SERVER_PORT, DEFAULT_SERVER_PORT);
   networkTableAddress = GetString(NETWORK_TABLE_ADDRESS, DEFAULT_NETWORK_TABLE_ADDRESS);
@@ -196,22 +207,31 @@ void MeeseeksProperties::SaveToString(std::string &str)
   nameValueMap[CAMERA_SATURATION]         = IntToString(camera.saturation,              stringValue);
   nameValueMap[CAMERA_FOCUS]              = IntToString(camera.focus,                   stringValue);
   
-  nameValueMap[ALGORITHIM_DISPLAY_TYPE]  = IntToString(algorithim.displayType, stringValue);
-  nameValueMap[ALGORITHIM_MIN_WIDTH]     = IntToString(algorithim.minWidth,    stringValue);
-  nameValueMap[ALGORITHIM_MIN_HEIGHT]    = IntToString(algorithim.minHeight,   stringValue);
-  nameValueMap[ALGORITHIM_MAX_WIDTH]     = IntToString(algorithim.maxWidth,    stringValue);
-  nameValueMap[ALGORITHIM_MAX_HEIGHT]    = IntToString(algorithim.maxHeight,   stringValue);
-  nameValueMap[ALGORITHIM_MIN_RED]       = IntToString(algorithim.minRed,      stringValue);
-  nameValueMap[ALGORITHIM_MAX_RED]       = IntToString(algorithim.maxRed,      stringValue);
-  nameValueMap[ALGORITHIM_MIN_GREEN]     = IntToString(algorithim.minGreen,    stringValue);
-  nameValueMap[ALGORITHIM_MAX_GREEN]     = IntToString(algorithim.maxGreen,    stringValue);
-  nameValueMap[ALGORITHIM_MIN_BLUE]      = IntToString(algorithim.minBlue,     stringValue);
-  nameValueMap[ALGORITHIM_MAX_BLUE]      = IntToString(algorithim.maxBlue,     stringValue);
-  nameValueMap[ALGORITHIM_JPEG_QUALITY]  = IntToString(algorithim.jpgQuality,  stringValue);
-  nameValueMap[ALGORITHIM_COLOR_SPACE]   = IntToString(algorithim.colorSpace,  stringValue);
-  nameValueMap[ALGORITHIM_BLUR]          = IntToString(algorithim.blur,        stringValue);
-  nameValueMap[ALGORITHIM_ERODE]         = IntToString(algorithim.erode,       stringValue);
-  nameValueMap[ALGORITHIM_DILATE]        = IntToString(algorithim.dilate,      stringValue);
+  nameValueMap[ALGORITHIM_DISPLAY_TYPE]    = IntToString(algorithim.displayType,    stringValue);
+  nameValueMap[ALGORITHIM_PROCESSING_TYPE] = IntToString(algorithim.processingType, stringValue);  
+  nameValueMap[ALGORITHIM_MIN_WIDTH]       = IntToString(algorithim.minWidth,       stringValue);
+  nameValueMap[ALGORITHIM_MIN_HEIGHT]      = IntToString(algorithim.minHeight,      stringValue);
+  nameValueMap[ALGORITHIM_MAX_WIDTH]       = IntToString(algorithim.maxWidth,       stringValue);
+  nameValueMap[ALGORITHIM_MAX_HEIGHT]      = IntToString(algorithim.maxHeight,      stringValue);
+  nameValueMap[ALGORITHIM_MIN_RED]         = IntToString(algorithim.minRed[0],      stringValue);
+  nameValueMap[ALGORITHIM_MAX_RED]         = IntToString(algorithim.maxRed[0],      stringValue);
+  nameValueMap[ALGORITHIM_MIN_GREEN]       = IntToString(algorithim.minGreen[0],    stringValue);
+  nameValueMap[ALGORITHIM_MAX_GREEN]       = IntToString(algorithim.maxGreen[0],    stringValue);
+  nameValueMap[ALGORITHIM_MIN_BLUE]        = IntToString(algorithim.minBlue[0],     stringValue);
+  nameValueMap[ALGORITHIM_MAX_BLUE]        = IntToString(algorithim.maxBlue[0],     stringValue);
+  nameValueMap[ALGORITHIM_JPEG_QUALITY]    = IntToString(algorithim.jpgQuality,     stringValue);
+  nameValueMap[ALGORITHIM_COLOR_SPACE]     = IntToString(algorithim.colorSpace[0],  stringValue);
+  nameValueMap[ALGORITHIM_BLUR]            = IntToString(algorithim.blur,           stringValue);
+  nameValueMap[ALGORITHIM_ERODE]           = IntToString(algorithim.erode,          stringValue);
+  nameValueMap[ALGORITHIM_DILATE]          = IntToString(algorithim.dilate,         stringValue);
+
+  nameValueMap[ALGORITHIM_MIN_RED_FLOOR]      = IntToString(algorithim.minRed[1],     stringValue);
+  nameValueMap[ALGORITHIM_MAX_RED_FLOOR]      = IntToString(algorithim.maxRed[1],     stringValue);
+  nameValueMap[ALGORITHIM_MIN_GREEN_FLOOR]    = IntToString(algorithim.minGreen[1],   stringValue);
+  nameValueMap[ALGORITHIM_MAX_GREEN_FLOOR]    = IntToString(algorithim.maxGreen[1],   stringValue);
+  nameValueMap[ALGORITHIM_MIN_BLUE_FLOOR]     = IntToString(algorithim.minBlue[1],    stringValue);
+  nameValueMap[ALGORITHIM_MAX_BLUE_FLOOR]     = IntToString(algorithim.maxBlue[1],    stringValue);
+   nameValueMap[ALGORITHIM_COLOR_SPACE_FLOOR] = IntToString(algorithim.colorSpace[1], stringValue);
 
   nameValueMap[ALGORITHIM_MIN_TAPE_AREA]         = IntToString(algorithim.minTapeArea,  stringValue);
   nameValueMap[ALGORITHIM_MIN_TAPE_ANGLE]        = IntToString(algorithim.minTapeAngle, stringValue);
